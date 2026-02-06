@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Snake</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="top">
+        <div class="score" aria-live="polite">
+          Apples <span id="score">0/5</span>
+        </div>
+        <div class="level" id="level">Level 1</div>
+      </header>
+
+      <div class="board-wrap">
+        <canvas id="board" width="400" height="400" aria-label="Snake game board"></canvas>
+        <div class="overlay" id="overlay" aria-hidden="true">
+          <div class="overlay-card">
+          <div class="overlay-title" id="overlay-title">Game Over</div>
+          <div class="overlay-score">Apples: <span id="final-score">0/5</span></div>
+          <div class="overlay-hint">Press any arrow key to play again</div>
+          </div>
+        </div>
+        <div class="status" id="status" aria-live="polite"></div>
+      </div>
+
+      <div class="controls">
+        <button id="start">Start</button>
+        <button id="restart">Restart</button>
+        <button id="pause">Pause</button>
+      </div>
+
+      <div class="mobile-controls" aria-hidden="false">
+        <button data-dir="up">▲</button>
+        <div class="middle">
+          <button data-dir="left">◀</button>
+          <button data-dir="down">▼</button>
+          <button data-dir="right">▶</button>
+        </div>
+      </div>
+
+      <p class="hint">Use arrow keys or WASD. Press Space to pause.</p>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>

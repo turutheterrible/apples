@@ -1,0 +1,214 @@
+:root {
+  --bg: #0f1216;
+  --panel: #151b22;
+  --grid: #1f2a36;
+  --snake: #6be675;
+  --snake-head: #a7f3b2;
+  --food: #ff7a7a;
+  --text: #e7eef7;
+  --muted: #94a3b8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+}
+
+.app {
+  width: min(520px, 92vw);
+  background: var(--panel);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  display: grid;
+  gap: 14px;
+}
+
+.top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.score {
+  font-size: 18px;
+  color: #f59f9f;
+}
+
+.score span {
+  font-family: "Comic Sans MS", "Trebuchet MS", "Verdana", cursive;
+  font-size: 28px;
+  color: var(--text);
+}
+
+.level {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.board-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+#board {
+  background: #0b0f14;
+  border: 2px solid var(--grid);
+  border-radius: 8px;
+  width: min(420px, 88vw);
+  height: min(420px, 88vw);
+}
+
+.status {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: rgba(11, 15, 20, 0.75);
+  border-radius: 8px;
+}
+
+.overlay-card {
+  background: #121821;
+  border: 1px solid #253243;
+  padding: 16px 20px;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 220px;
+}
+
+.overlay.win .overlay-card {
+  background: #ff5a5a;
+  border-color: #ff5a5a;
+  border-radius: 999px;
+  width: 260px;
+  height: 260px;
+  display: grid;
+  place-items: center;
+  padding: 0 22px;
+  position: relative;
+}
+
+.overlay.win .overlay-card::before {
+  content: "";
+  position: absolute;
+  top: -22px;
+  width: 18px;
+  height: 36px;
+  background: #5b3a1b;
+  border-radius: 12px;
+}
+
+.overlay.win .overlay-card::after {
+  content: "";
+  position: absolute;
+  top: -30px;
+  right: 85px;
+  width: 50px;
+  height: 24px;
+  background: #4ade80;
+  border-radius: 999px;
+  transform: rotate(-25deg);
+}
+
+.overlay.win .overlay-title,
+.overlay.win .overlay-score,
+.overlay.win .overlay-hint {
+  color: #1b1b1b;
+}
+
+.overlay-title {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.overlay-score {
+  font-family: "Comic Sans MS", "Trebuchet MS", "Verdana", cursive;
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.overlay-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+button {
+  background: #1f2a36;
+  color: var(--text);
+  border: 1px solid #2a3645;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #263244;
+}
+
+.mobile-controls {
+  display: none;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+}
+
+.mobile-controls .middle {
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  grid-auto-rows: 44px;
+  gap: 6px;
+  align-items: center;
+  justify-items: center;
+}
+
+.mobile-controls button {
+  width: 44px;
+  height: 44px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .mobile-controls {
+    display: grid;
+  }
+}
