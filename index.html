@@ -17,11 +17,28 @@
 
       <div class="board-wrap">
         <canvas id="board" width="400" height="400" aria-label="Snake game board"></canvas>
+        <div class="timer" id="timer">00:00</div>
         <div class="overlay" id="overlay" aria-hidden="true">
           <div class="overlay-card">
-          <div class="overlay-title" id="overlay-title">Game Over</div>
-          <div class="overlay-score">Apples: <span id="final-score">0/5</span></div>
-          <div class="overlay-hint">Press any arrow key to play again</div>
+            <div class="overlay-win" id="overlay-win">
+              <div class="overlay-title" id="overlay-title">Game Over</div>
+              <div class="overlay-score">Apples: <span id="final-score">0/5</span></div>
+              <button class="overlay-action" id="prize-btn" type="button">Click here for your prize</button>
+              <div class="overlay-hint">Press any arrow key to play again</div>
+            </div>
+            <div class="overlay-prize" id="overlay-prize" hidden>
+              <div class="prize-worm">
+                <div class="hat"></div>
+                <div class="glasses">
+                  <span></span>
+                  <span></span>
+                </div>
+                <div class="worm-body"></div>
+              </div>
+              <div class="overlay-title">You must really like apples</div>
+              <div class="records-title">Recent Wins</div>
+              <div class="records" id="records"></div>
+            </div>
           </div>
         </div>
         <div class="status" id="status" aria-live="polite"></div>

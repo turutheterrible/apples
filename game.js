@@ -7,6 +7,11 @@
   const finalScoreEl = document.getElementById("final-score");
   const overlayTitleEl = document.getElementById("overlay-title");
   const levelEl = document.getElementById("level");
+  const timerEl = document.getElementById("timer");
+  const prizeBtn = document.getElementById("prize-btn");
+  const overlayWinEl = document.getElementById("overlay-win");
+  const overlayPrizeEl = document.getElementById("overlay-prize");
+  const recordsEl = document.getElementById("records");
   const startBtn = document.getElementById("start");
   const restartBtn = document.getElementById("restart");
   const pauseBtn = document.getElementById("pause");
@@ -158,6 +163,11 @@
 
   let state = createInitialState();
   let timerId = null;
+  let clockId = null;
+  let recordedWin = false;
+  let elapsedMs = 0;
+  let lastStartTs = null;
+  const winRecords = [];
 
   function resizeCanvas() {
     const size = Math.min(420, Math.floor(window.innerWidth * 0.88));
@@ -186,7 +196,7 @@
     drawApple(state.food.x * cell + cell / 2, state.food.y * cell + cell / 2, cell * 0.42);
 
     state.worms.forEach((worm) => {
-      drawWorm(worm.x * cell + cell / 2, worm.y * cell + cell / 2, cell * 0.35);
+      drawWorm(worm, cell);
     });
 
     state.snake.forEach((segment, idx) => {
@@ -223,15 +233,20 @@
     ctx.fill();
   }
 
-  function drawWorm(cx, cy, r) {
-    ctx.fillStyle = "#f472b6";
+  function drawWorm(worm, cell) {
+    const cx = worm.x * cell + cell / 2;
+    const cy = worm.y * cell + cell / 2;
+    const r = cell * 0.35;
+    ctx.strokeStyle = "#f472b6";
+    ctx.lineWidth = Math.max(2, r * 0.6);
+    ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.ellipse(cx, cy, r * 1.1, r * 0.35, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#f9a8d4";
-    ctx.beginPath();
-    ctx.ellipse(cx + r * 0.3, cy - r * 0.05, r * 0.6, r * 0.25, 0, 0, Math.PI * 2);
-    ctx.fill();
+    const sway = r * 0.6;
+    const step = r * 0.7;
+    const direction = worm.phase ? -1 : 1;
+    ctx.moveTo(cx - step, cy);
+    ctx.bezierCurveTo(cx - step * 0.6, cy + sway * direction, cx, cy - sway * direction, cx + step * 0.6, cy + sway * direction);
+    ctx.stroke();
   }
 
   function drawTongue(head, cell, direction) {
@@ -269,42 +284,64 @@
     scoreEl.textContent = `${state.apples}/${target}`;
     levelEl.textContent = `Level ${state.level}`;
     levelEl.style.color = LEVEL_COLORS[state.level - 1] ?? LEVEL_COLORS[LEVEL_COLORS.length - 1];
+    timerEl.textContent = formatTime(getElapsedMs());
     if (state.win) {
+      stopClock();
       setStatus("");
-      overlayTitleEl.textContent = "You Win! I knew you could do it!";
+      overlayTitleEl.textContent = "You Win!";
       finalScoreEl.textContent = `${state.apples}/${target}`;
       overlayEl.style.display = "grid";
       overlayEl.setAttribute("aria-hidden", "false");
       overlayEl.classList.add("win");
+      overlayWinEl.hidden = false;
+      overlayPrizeEl.hidden = true;
+      prizeBtn.style.display = "inline-flex";
       return;
     }
     if (state.gameOver) {
+      stopClock();
       setStatus("Game over. Press Restart.");
       overlayTitleEl.textContent = "Game Over";
       finalScoreEl.textContent = `${state.apples}/${target}`;
       overlayEl.style.display = "grid";
       overlayEl.setAttribute("aria-hidden", "false");
       overlayEl.classList.remove("win");
+      overlayWinEl.hidden = false;
+      overlayPrizeEl.hidden = true;
+      prizeBtn.style.display = "none";
     } else if (!state.running) {
       setStatus("Press Start to play.");
       overlayEl.style.display = "none";
       overlayEl.setAttribute("aria-hidden", "true");
       overlayEl.classList.remove("win");
+      overlayWinEl.hidden = false;
+      overlayPrizeEl.hidden = true;
+      prizeBtn.style.display = "none";
     } else if (state.paused) {
       setStatus("Paused.");
       overlayEl.style.display = "none";
       overlayEl.setAttribute("aria-hidden", "true");
       overlayEl.classList.remove("win");
+      overlayWinEl.hidden = false;
+      overlayPrizeEl.hidden = true;
+      prizeBtn.style.display = "none";
     } else {
       setStatus("");
       overlayEl.style.display = "none";
       overlayEl.setAttribute("aria-hidden", "true");
       overlayEl.classList.remove("win");
+      overlayWinEl.hidden = false;
+      overlayPrizeEl.hidden = true;
+      prizeBtn.style.display = "none";
     }
   }
 
   function tick() {
     state = nextState(state, state.pendingDirection);
+    if (state.win && !recordedWin) {
+      recordedWin = true;
+      addWinRecord(getElapsedMs());
+    }
     updateUI();
     draw();
     scheduleTick();
@@ -333,8 +370,12 @@
     }
     if (!state.running) {
       state = { ...state, running: true, paused: false };
+      if (lastStartTs === null) {
+        lastStartTs = performance.now();
+      }
     }
     scheduleTick();
+    startClock();
     updateUI();
   }
 
@@ -343,6 +384,11 @@
       return;
     }
     state = { ...state, paused: !state.paused };
+    if (state.paused) {
+      stopClock();
+    } else {
+      startClock();
+    }
     scheduleTick();
     updateUI();
   }
@@ -350,6 +396,10 @@
   function restartGame() {
     state = createInitialState();
     state.food = placeFood(state);
+    recordedWin = false;
+    elapsedMs = 0;
+    lastStartTs = null;
+    stopClock();
     updateUI();
     draw();
   }
@@ -385,6 +435,58 @@
     if (key === " " || key === "p") pauseGame();
   }
 
+  function getElapsedMs() {
+    if (state.running && !state.paused && lastStartTs !== null) {
+      return elapsedMs + (performance.now() - lastStartTs);
+    }
+    return elapsedMs;
+  }
+
+  function formatTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  function startClock() {
+    if (clockId) return;
+    if (lastStartTs === null) lastStartTs = performance.now();
+    clockId = setInterval(() => {
+      timerEl.textContent = formatTime(getElapsedMs());
+    }, 250);
+  }
+
+  function stopClock() {
+    if (clockId) {
+      clearInterval(clockId);
+      clockId = null;
+    }
+    if (lastStartTs !== null) {
+      elapsedMs += performance.now() - lastStartTs;
+      lastStartTs = null;
+    }
+  }
+
+  function addWinRecord(ms) {
+    winRecords.unshift(ms);
+    if (winRecords.length > 5) winRecords.pop();
+    renderRecords();
+  }
+
+  function renderRecords() {
+    recordsEl.textContent = "";
+    if (winRecords.length === 0) {
+      recordsEl.textContent = "No wins yet.";
+      return;
+    }
+    winRecords.forEach((ms, idx) => {
+      const line = document.createElement("div");
+      line.textContent = `Win ${idx + 1}: ${formatTime(ms)}`;
+      recordsEl.appendChild(line);
+    });
+  }
+
   startBtn.addEventListener("click", startGame);
   restartBtn.addEventListener("click", restartGame);
   pauseBtn.addEventListener("click", pauseGame);
@@ -414,7 +516,7 @@
       return { x: 0, y: 0 };
     }
     const idx = Math.floor(rng() * empty.length);
-    return empty[idx];
+    return { ...empty[idx], phase: false };
   }
 
   function moveWorms() {
@@ -432,9 +534,9 @@
         if (state.food.x === next.x && state.food.y === next.y) return;
         options.push(next);
       });
-      if (options.length === 0) return worm;
+      if (options.length === 0) return { ...worm, phase: !worm.phase };
       const idx = Math.floor(Math.random() * options.length);
-      return options[idx];
+      return { ...options[idx], phase: !worm.phase };
     });
     state = { ...state, worms: nextWorms };
     draw();
@@ -470,10 +572,16 @@
 
   resizeCanvas();
   state.food = placeFood(state);
+  renderRecords();
   updateUI();
   draw();
   scheduleAppleMove();
   setInterval(moveWorms, WORM_MOVE_MS);
+
+  prizeBtn.addEventListener("click", () => {
+    overlayWinEl.hidden = true;
+    overlayPrizeEl.hidden = false;
+  });
 
   // Expose pure functions for optional manual testing in console.
   window.SnakeLogic = { createInitialState, nextState, placeFood };
