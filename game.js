@@ -168,6 +168,30 @@
   let elapsedMs = 0;
   let lastStartTs = null;
   const winRecords = [];
+  let audioCtx = null;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+  }
+
+  function playTone(freq, durationMs, type = "sine", gainValue = 0.06) {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = gainValue;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + durationMs / 1000);
+  }
 
   function resizeCanvas() {
     const size = Math.min(420, Math.floor(window.innerWidth * 0.88));
@@ -337,7 +361,23 @@
   }
 
   function tick() {
+    const prevState = state;
     state = nextState(state, state.pendingDirection);
+    const moved = prevState.snake[0].x !== state.snake[0].x || prevState.snake[0].y !== state.snake[0].y;
+    const ateFood = prevState.food.x === state.snake[0].x && prevState.food.y === state.snake[0].y;
+    if (moved && prevState.running && !prevState.paused && !prevState.gameOver && !prevState.win) {
+      playTone(220, 30, "square", 0.03);
+    }
+    if (ateFood) {
+      playTone(520, 80, "triangle", 0.08);
+    }
+    if (!prevState.gameOver && state.gameOver) {
+      playTone(140, 220, "sawtooth", 0.09);
+    }
+    if (!prevState.win && state.win) {
+      playTone(660, 180, "triangle", 0.08);
+      setTimeout(() => playTone(880, 180, "triangle", 0.08), 120);
+    }
     if (state.win && !recordedWin) {
       recordedWin = true;
       addWinRecord(getElapsedMs());
@@ -374,6 +414,7 @@
         lastStartTs = performance.now();
       }
     }
+    ensureAudio();
     scheduleTick();
     startClock();
     updateUI();
@@ -383,6 +424,7 @@
     if (!state.running || state.gameOver) {
       return;
     }
+    ensureAudio();
     state = { ...state, paused: !state.paused };
     if (state.paused) {
       stopClock();
@@ -416,6 +458,7 @@
 
   function handleKey(e) {
     const key = e.key.toLowerCase();
+    ensureAudio();
     const isArrow = key === "arrowup" || key === "arrowdown" || key === "arrowleft" || key === "arrowright";
     if ((state.gameOver || state.win) && isArrow) {
       restartGame();
