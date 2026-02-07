@@ -8,46 +8,41 @@
   </head>
   <body>
     <main class="app">
-      <header class="top">
-        <div class="score" aria-live="polite">
-          Apples <span id="score">0/5</span>
-        </div>
+      <div class="hud-top-bar">
+        <div class="score" aria-live="polite">Apples <span id="score">0/3</span></div>
         <div class="level" id="level">Level 1</div>
-      </header>
+        <div class="timer" id="timer">00:00</div>
+      </div>
 
       <div class="board-wrap">
-        <canvas id="board" width="400" height="400" aria-label="Snake game board"></canvas>
-        <div class="timer" id="timer">00:00</div>
+        <canvas id="board"></canvas>
+
+        <!-- GAME OVER / WIN OVERLAY -->
         <div class="overlay" id="overlay" aria-hidden="true">
           <div class="overlay-card">
-            <div class="overlay-win" id="overlay-win">
-              <div class="overlay-title" id="overlay-title">Game Over</div>
-              <div class="overlay-score">Apples: <span id="final-score">0/5</span></div>
-              <button class="overlay-action" id="prize-btn" type="button">Click here for your prize</button>
-              <div class="overlay-hint">Press any arrow key to play again</div>
+            <img id="overlay-art" class="overlay-art" src="assets/angryworm.png" alt="Angry worm" style="display:none;" />
+            <div class="overlay-title" id="overlay-title"></div>
+            <div class="overlay-subtext" id="overlay-subtext"></div>
+            <div class="overlay-score">
+              Apples: <span id="final-score"></span>
             </div>
-            <div class="overlay-prize" id="overlay-prize" hidden>
-              <div class="prize-worm">
-                <div class="hat"></div>
-                <div class="glasses">
-                  <span></span>
-                  <span></span>
-                </div>
-                <div class="worm-body"></div>
-              </div>
-              <div class="overlay-title">You must really like apples</div>
-              <div class="records-title">Recent Wins</div>
-              <div class="records" id="records"></div>
-            </div>
+            <button class="overlay-action" id="overlay-action">Restart</button>
           </div>
         </div>
+
         <div class="status" id="status" aria-live="polite"></div>
       </div>
 
-      <div class="controls">
-        <button id="start">Start</button>
-        <button id="restart">Restart</button>
-        <button id="pause">Pause</button>
+      <div class="hud hud-bottom">
+        <div class="controls">
+          <button id="start">Start</button>
+          <button id="restart">Restart</button>
+          <button id="pause">Pause</button>
+        </div>
+
+        <div class="hint-strip">
+          <p class="hint">Use arrow keys or WASD. Press Space to pause. (Space restarts after win/lose.)</p>
+        </div>
       </div>
 
       <div class="mobile-controls" aria-hidden="false">
@@ -58,8 +53,6 @@
           <button data-dir="right">▶</button>
         </div>
       </div>
-
-      <p class="hint">Use arrow keys or WASD. Press Space to pause.</p>
     </main>
 
     <script src="game.js"></script>
